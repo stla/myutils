@@ -1,0 +1,7 @@
+.Rproj.user
+.Rhistory
+.RData
+/man/*.Rd
+example*
+figure*
+/inst/scianimator
