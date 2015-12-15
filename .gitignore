@@ -4,4 +4,7 @@
 /man/*.Rd
 example*
 figure*
-/inst/scianimator
+/inst/scianimator/*.html
+!/inst/scianimator/index*
+/inst/scianimator/assets/*/*
+!/inst/scianimator/assets/js/index.js
