@@ -8,3 +8,5 @@ figure*
 !/inst/scianimator/index*
 /inst/scianimator/assets/*/*
 !/inst/scianimator/assets/js/index.js
+/inst/plot2tikz/*
+!inst/plot2tikz/*.R

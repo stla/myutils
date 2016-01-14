@@ -1,5 +1,9 @@
 #' Generate LaTeX figures in png format
 #' 
+#' to do: sortie eps (commenter les 3 lignes 
+#' "usepackage[active",  "PreviewEnvironment", "setlengthPreviewBorder" et 
+#' ajouter "pagenumbering{gobble}")
+#' 
 #' @importFrom tikzDevice tikz
 #' @importFrom jsonlite toJSON
 #' @export
@@ -8,7 +12,7 @@ tikz2png <- function(code, nplots, prefix="Rplot", outdir=getwd(), folder="asset
   owd <- setwd(outdir); on.exit(setwd(owd))
   if(!all(file.exists(texfiles))){
     tikz(attr(texfiles, "string"), standAlone=TRUE, onefile=FALSE, ...)
-      code(nplots)
+    code(nplots)
     dev.off()
   }
   # pdf compilation
