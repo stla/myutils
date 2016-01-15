@@ -41,5 +41,31 @@ Bgraph(function(n) Mn[[n+1]], N=4, USE.COLNAMES = TRUE, label_root = "abcdefgh")
 labs_edges <- c("5/8", "3/8", "3/5", "2/5", "1", "2/3", "1/3", "1", "2/3", "1/3", "1/2", "1/2", "1", "1/2", "1/2", "1/2", "1/2", "1")
 Bgraph(function(n) Mn[[n+1]], N=4, USE.COLNAMES = TRUE, label_root = "abcdefgh", 
        labs_edges = labs_edges, 
-       cex_vertex = 1, cex_edge = 1, 
-       path=c(0,0,0,0,0))
+       cex_vertex = 1, cex_edge = 0.75, 
+       path=c(1,0,0,0,0))
+
+# version LaTeX 
+colnames(Mn[[1]]) <- c("abcde", "fgh")
+colnames(Mn[[2]]) <- c("abc", "de", "fgh")
+colnames(Mn[[3]]) <- c("ab", "c", "de", "fg", "h")
+colnames(Mn[[4]]) <- c("a", "b", "c", "d", "e", "f", "g", "h")
+labs_edges <- c("5/8", "3/8", "3/5", "2/5", "1", "2/3", "1/3", "1", "2/3", "1/3", "1/2", "1/2", "1", "1/2", "1/2", "1/2", "1/2", "1")
+Bgraph(function(n) Mn[[n+1]], N=4, USE.COLNAMES = TRUE, label_root = "abcdefgh", 
+       labs_edges = labs_edges, 
+       cex_vertex = 1, cex_edge = 0.75, 
+       path=c(1,0,0,0,0), 
+       LaTeX=TRUE)
+
+# compile eps 
+setwd("~/Github/myutils/inst/bratteli")
+plotCode <- function(){
+  Bgraph(function(n) Mn[[n+1]], N=4, USE.COLNAMES = TRUE, label_root = "abcdefgh", 
+         labs_edges = labs_edges, 
+         cex_vertex = 1, cex_edge = 0.75, 
+         path=c(1,0,0,0,0), 
+         LaTeX=TRUE)
+  return(invisible())
+}
+plot2tikz(plotCode, format="eps", compile=TRUE, clean=TRUE, overwrite=TRUE, 
+          documentDeclaration ="\\documentclass[12pt]{standalone}\n", 
+          width=7, height=5)

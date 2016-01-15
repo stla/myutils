@@ -78,6 +78,7 @@ Bgraph <- function(fun_Mn, N, title=NA,
   nr <- nrow(fromto)
   if(labels_edges){
     if(is.null(labs_edges)) labs_edges <- unlist( by(fromto[,1], fromto[,1], FUN=function(x) 1:length(x)) ) - 1
+    if(LaTeX) labs_edges <- paste0("$", labs_edges, "$")
   }
   arrpos <- matrix(ncol = 2, nrow = nr)
   # START PLOT 
@@ -103,7 +104,6 @@ Bgraph <- function(fun_Mn, N, title=NA,
     }
     # labels on edges 
     if(labels_edges && !labels_path){ 
-      if(LaTeX) labels_edges <- paste0("$", labels_edges, "$")
       mid <- arrpos[i, ]
       if(ellipse_edge){
         textellipse(mid, 0.02, lab=labs_edges[i], cex=cex_edge, lcol="black", shadow.size=0) 
@@ -126,13 +126,15 @@ Bgraph <- function(fun_Mn, N, title=NA,
   # labels on vertices
   if(labels_vertex){
     # root label 
+    if(LaTeX) label_root <- paste0("$", label_root, "$")
     textellipse(elpos[1,], 0.01, 0.01, lab = label_root, box.col="white", shadow.size=0, lcol="white", cex=cex_vertex) 
     # vertices labels
     start <- ifelse(only_end, N, 1)
     for(n in start:N){ 
       for(i in 1:ncol(Mn[[n]])){
         lab <- as.character(ifelse(USE.COLNAMES, colnames(Mn[[n]])[i] , i-1+first_vertex))
-        if(LaTeX && !USE.COLNAMES) lab <- paste0("$", lab, "$")
+        # if(LaTeX && !USE.COLNAMES) lab <- paste0("$", lab, "$")
+        if(LaTeX) lab <- paste0("$", lab, "$")
         if(ellipse_vertex){
           textellipse(elpos[vertex(n,i),], 0.02, 0.02, lab=lab, box.col="white", shadow.size=0, cex=cex_vertex)          
         }else{
