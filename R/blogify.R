@@ -2,6 +2,8 @@
 #' 
 #' Modification of \code{rmarkdown::html_fragment} in order to control \code{mathjax}
 #' 
+#' ceci a été corrigé quand j'ai posté l'issue, mais je ne me souviens pas de ce que c'est 
+#' 
 #' @importFrom rmarkdown html_document
 #' @export
 html_fragment <- function (number_sections = FALSE, fig_width = 7, fig_height = 5, 
@@ -18,11 +20,14 @@ html_fragment <- function (number_sections = FALSE, fig_width = 7, fig_height = 
 
 #' Convert a Rmd file to a html ready for stlapblog
 #' 
+#' le "local" ne résoud pas la problème avec gmp
+#' par ailleurs je ne sais pas à quoi il sert...
+#' 
 #' @importFrom rmarkdown render
-#' @import stringr
+#' @importFrom stringr str_detect str_split_fixed
 #' @import data.table
 #' @export
-blogify <- function(Rmd, date=NULL, outdir=NULL, template=system.file("blogify/z_template.html", package="myutils")){
+blogify <- function(Rmd, date=NULL, outdir=NULL, local=TRUE, template=system.file("blogify/z_template.html", package="myutils")){
   meta <- readLines(Rmd, n=5)
   if(is.null(outdir)) outdir <- dirname(Rmd)
   if(is.null(date)){
@@ -39,7 +44,11 @@ blogify <- function(Rmd, date=NULL, outdir=NULL, template=system.file("blogify/z
   lines[whichlines[2]] <- sprintf(lines[whichlines[2]], title)
   lines[whichlines[3]] <- sprintf(lines[whichlines[3]], date)
   lines[whichlines[4]] <- sprintf(lines[whichlines[4]], Rmd)
-  html <- local({ rmarkdown::render(Rmd, output_format=html_fragment(mathjax="default", self_contained=FALSE), output_dir=outdir) })
+  if(local) {
+    html <- local({ rmarkdown::render(Rmd, output_format=html_fragment(mathjax="default", self_contained=FALSE), output_dir=outdir) })
+  } else{
+    html <- rmarkdown::render(Rmd, output_format=html_fragment(mathjax="default", self_contained=FALSE), output_dir=outdir)
+  }
   lines[whichlines[5]] <- paste(readLines(html), collapse="\n")
   writeLines(lines, html)
   return("")  
