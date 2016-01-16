@@ -20,14 +20,14 @@ html_fragment <- function (number_sections = FALSE, fig_width = 7, fig_height = 
 
 #' Convert a Rmd file to a html ready for stlapblog
 #' 
-#' le "local" ne résoud pas la problème avec gmp
-#' par ailleurs je ne sais pas à quoi il sert...
+#' @param local  ne résoud pas la problème avec gmp;  par ailleurs je ne sais pas à quoi il sert...
+#' @param htmlfragment si ça ne marche pas avec \code{NULL}, lancer à la main \code{library(rmarkdown); render("posts/IntrinsicDistances.Rmd", output_format=html_fragment(mathjax=TRUE, self_contained=FALSE))} et mettre le fichier html
 #' 
 #' @importFrom rmarkdown render
 #' @importFrom stringr str_detect str_split_fixed
 #' @import data.table
 #' @export
-blogify <- function(Rmd, date=NULL, outdir=NULL, local=TRUE, template=system.file("blogify/z_template.html", package="myutils")){
+blogify <- function(Rmd, htmlfragment=NULL, date=NULL, outdir=NULL, local=TRUE, template=system.file("blogify/z_template.html", package="myutils")){
   meta <- readLines(Rmd, n=5)
   if(is.null(outdir)) outdir <- dirname(Rmd)
   if(is.null(date)){
@@ -44,12 +44,21 @@ blogify <- function(Rmd, date=NULL, outdir=NULL, local=TRUE, template=system.fil
   lines[whichlines[2]] <- sprintf(lines[whichlines[2]], title)
   lines[whichlines[3]] <- sprintf(lines[whichlines[3]], date)
   lines[whichlines[4]] <- sprintf(lines[whichlines[4]], Rmd)
-  if(local) {
-    html <- local({ rmarkdown::render(Rmd, output_format=html_fragment(mathjax="default", self_contained=FALSE), output_dir=outdir) })
-  } else{
-    html <- rmarkdown::render(Rmd, output_format=html_fragment(mathjax="default", self_contained=FALSE), output_dir=outdir)
+  if(is.null(htmlfragment)){
+    if(local) {
+      html <- local({ rmarkdown::render(Rmd, output_format=html_fragment(mathjax="default", self_contained=FALSE), output_dir=outdir) })
+    } else{
+      html <- rmarkdown::render(Rmd, output_format=html_fragment(mathjax="default", self_contained=FALSE), output_dir=outdir)
+    }
+  } else {
+    html <- htmlfragment
   }
   lines[whichlines[5]] <- paste(readLines(html), collapse="\n")
-  writeLines(lines, html)
-  return("")  
+  if(is.null(htmlfragment)){
+    writeLines(lines, html)
+  }else{
+    html <- paste0(knitr:::sans_ext(Rmd), ".html")
+    writeLines(lines, html)
+  }
+  return(html)  
 }
