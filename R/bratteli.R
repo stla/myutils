@@ -16,9 +16,11 @@
 Bgraph <- function(fun_Mn, N, title=NA, 
                    path=NULL, col_path="blue", lwd_path=4, labels_path=FALSE, 
                    labels_vertex=TRUE, USE.COLNAMES=FALSE, first_vertex=0, label_root="ø", only_end=FALSE, cex_vertex=1.5, 
+                   voffset_labels=0, hoffset_labels=function(n,i) 0,   
                    labels_edges=TRUE, labs_edges=NULL, cex_edge=1.1, 
+                   col_edge="gray", lwd_edge=2, 
                    ellipse_vertex=FALSE, ellipse_edge=FALSE, LaTeX=FALSE, 
-                   points_vertex=FALSE, pch_vertex=19, ...){
+                   points_vertex=FALSE, pch_vertex=19, cex_pch=1, ...){
   Mn <- sapply(0:(N-1), function(n) fun_Mn(n))
   nvertices <- sapply(1:N, function(n) nrow(Mn[[n]])) # number of vertices per level
   elpos <- coordinates (c(nvertices, ncol(Mn[[N]])), ...) # positions of vertices
@@ -66,11 +68,11 @@ Bgraph <- function(fun_Mn, N, title=NA,
         fromto <- rbind(fromto, c(current,goto))
         multiplicity <- c(multiplicity, Mn[[n+1]][i,k])
         s <- which.max(Mn[[n+1]][i,]>0)-1
-        lcol <- rbind(lcol, ifelse(all(c(i,k)==path[n:(n+1)]), col_path, "gray")
+        lcol <- rbind(lcol, ifelse(all(c(i,k)==path[n:(n+1)]), col_path, col_edge)
         )
         lty <- rbind(lty, ifelse(all(c(i,k)==path[n:(n+1)]), "solid", "solid")
         )
-        lwd <- rbind(lwd, ifelse(all(c(i,k)==path[n:(n+1)]), lwd_path, 2)
+        lwd <- rbind(lwd, ifelse(all(c(i,k)==path[n:(n+1)]), lwd_path, lwd_edge)
         )
       }
     }
@@ -138,7 +140,7 @@ Bgraph <- function(fun_Mn, N, title=NA,
         if(ellipse_vertex){
           textellipse(elpos[vertex(n,i),], 0.02, 0.02, lab=lab, box.col="white", shadow.size=0, cex=cex_vertex)          
         }else{
-          textempty(elpos[vertex(n,i),], lab = lab, cex=cex_vertex)  
+          textempty(elpos[vertex(n,i),] + c(hoffset_labels(n,i), voffset_labels), lab = lab, cex=cex_vertex)  
         }
       }
     }
@@ -151,7 +153,7 @@ Bgraph <- function(fun_Mn, N, title=NA,
     start <- ifelse(only_end, N, 1)
     for(n in start:N){ 
       for(i in 1:ncol(Mn[[n]])){
-          points(elpos[vertex(n,i),1], elpos[vertex(n,i),2], cex=cex_vertex, pch=19)  
+          points(elpos[vertex(n,i),1], elpos[vertex(n,i),2], pch=pch_vertex, cex=cex_pch)  
       }
     }
   }

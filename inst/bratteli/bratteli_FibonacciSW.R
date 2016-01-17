@@ -2,12 +2,25 @@
 
 # graphe de Bratteli ------------------------------------------------------
 Mn_fun <- function(n){
-  if(n==0) return(t(c(1,1)))
+  if(n==0) return(t(setNames(c(1,1), c(0,1))))
   M <- matrix(1, nrow=2, ncol=2)
   if(n%%2==0) M[2,1] <- 0 else M[1,2] <- 0
+  if(n%%2==0) colnames(M) <- c(0,1) else colnames(M) <- c(1,0) 
   return(M)
 }
-Bgraph(Mn_fun, N=5, points_vertex = TRUE, labels_vertex = FALSE) 
+myutils::Bgraph(Mn_fun, N=5, 
+                points_vertex = TRUE, cex_pch=3, labels_vertex = FALSE) 
+myutils::Bgraph(Mn_fun, N=5, 
+                labels_edges = FALSE, 
+                points_vertex = TRUE, cex_pch=0.5, 
+                labels_vertex = TRUE, USE.COLNAMES=TRUE, 
+                voffset_labels = 0.01, cex_vertex = 1) 
+myutils::Bgraph(Mn_fun, N=5, 
+                labels_edges = FALSE, 
+                points_vertex = TRUE, cex_pch=0.5, 
+                labels_vertex = TRUE, USE.COLNAMES=TRUE, 
+                voffset_labels = 0.01, cex_vertex = 1,
+                hoffset_labels=function(n,i) (-1)^i*.1) 
 
 labs_edges = c(NA, NA, 1, 0, 0, 0, 0, 1, 1, 0, 0)
 Bgraph(Mn_fun, N=5, points_vertex = TRUE, labels_vertex = FALSE, 
