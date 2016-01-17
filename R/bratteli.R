@@ -31,6 +31,7 @@ Bgraph <- function(fun_Mn, N, title=NA,
   # 
   l <- length(path)
   path <- c(path, rep(0,N+1-l))
+  if(length(col_path)==1) col_path <- rep(col_path, length(path))
   path <- path +1  # NA useless but..
   vpath <- path[1]
   for(k in 2:N){
@@ -49,7 +50,7 @@ Bgraph <- function(fun_Mn, N, title=NA,
     fromto <- rbind(fromto, c(current,goto))
     multiplicity <- c(multiplicity, Mn[[1]][1,i])
     lcol <- rbind(lcol, 
-                  ifelse(i==path[1], col_path, "gray")
+                  ifelse(i==path[1], col_path[1], "gray")
     )
     lty <- rbind(lty, 
                  ifelse(i==path[1], "solid", "solid")
@@ -68,7 +69,7 @@ Bgraph <- function(fun_Mn, N, title=NA,
         fromto <- rbind(fromto, c(current,goto))
         multiplicity <- c(multiplicity, Mn[[n+1]][i,k])
         s <- which.max(Mn[[n+1]][i,]>0)-1
-        lcol <- rbind(lcol, ifelse(all(c(i,k)==path[n:(n+1)]), col_path, col_edge)
+        lcol <- rbind(lcol, ifelse(all(c(i,k)==path[n:(n+1)]), col_path[n+1], col_edge)
         )
         lty <- rbind(lty, ifelse(all(c(i,k)==path[n:(n+1)]), "solid", "solid")
         )
