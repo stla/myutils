@@ -17,7 +17,7 @@ Bgraph <- function(fun_Mn, N, title=NA,
                    path=NULL, col_path="blue", lwd_path=4, labels_path=FALSE, 
                    labels_vertex=TRUE, USE.COLNAMES=FALSE, first_vertex=0, label_root="ø", only_end=FALSE, cex_vertex=1.5, 
                    voffset_labels=0, hoffset_labels=function(n,i) 0,   
-                   labels_edges=TRUE, labs_edges=NULL, cex_edge=1.1, 
+                   labels_edges=TRUE, labs_edges=NULL, cex_edge=1.1, col_labels_edge="black", 
                    col_edge="gray", lwd_edge=2, 
                    ellipse_vertex=FALSE, ellipse_edge=FALSE, LaTeX=FALSE, 
                    points_vertex=FALSE, pch_vertex=19, cex_pch=1, ...){
@@ -56,7 +56,7 @@ Bgraph <- function(fun_Mn, N, title=NA,
                  ifelse(i==path[1], "solid", "solid")
     )
     lwd <- rbind(lwd, 
-                 ifelse(i==path[1], lwd_path, 2)
+                 ifelse(i==path[1], lwd_path, lwd_edge)
     )
   }
   # connections from level n
@@ -109,9 +109,9 @@ Bgraph <- function(fun_Mn, N, title=NA,
     if(labels_edges && !labels_path){ 
       mid <- arrpos[i, ]
       if(ellipse_edge){
-        textellipse(mid, 0.02, lab=labs_edges[i], cex=cex_edge, lcol="black", shadow.size=0) 
+        textellipse(mid, 0.02, lab=labs_edges[i], cex=cex_edge, lcol="black", col=col_labels_edge, shadow.size=0) 
       }else{
-        textempty(mid+c(0,0), lab=labs_edges[i], cex=cex_edge)
+        textempty(mid+c(0,0), lab=labs_edges[i], cex=cex_edge, col=col_labels_edge)
       }
     }
     # labels on the blue path

@@ -84,7 +84,7 @@ plot2tikz <- function(code, filename="Rplot", outdir=getwd(), overwrite=FALSE, f
         tools::texi2dvi(texfile, pdf=FALSE, clean=clean)
         command <- sprintf("dvips %s.dvi", filename)
         system(command)
-        command <- sprintf("ps2eps %s.ps", filename)
+        command <- ifelse(overwrite, sprintf("ps2eps -f %s.ps", filename),  sprintf("ps2eps %s.ps", filename))
         system(command)
       }
     }
