@@ -11,7 +11,7 @@ charseq <- function(I, prefix=NULL, suffix=NULL, ndigits=floor(log10(I))+1){
   return(out)
 }
 
-#' Binary representation
+#' Binary representation (deprecated)
 #' 
 #' @examples
 #' number2binary(1,1)
@@ -26,8 +26,52 @@ charseq <- function(I, prefix=NULL, suffix=NULL, ndigits=floor(log10(I))+1){
 #' number2binary(31,5)
 #' @export
 number2binary <- function(number, noBits=1+floor(log2(max(number,1)))) {
+  .Deprecated("int2binary")
   if(noBits < 1+floor(log2(number))) warning(sprintf("noBits=%s is not enough", noBits))
   binary_vector <- rev(as.numeric(intToBits(number)))
   return( binary_vector[-(1:(length(binary_vector) - noBits))] )
 }
 
+#' Binary representation of integers
+#' 
+#' @examples
+#' int2binary(1,1)
+#' int2binary(3,2)
+#' int2binary(7,3)
+#' int2binary(15,4)
+#' int2binary(15,6)
+#' int2binary(15)
+#' int2binary(15,3)
+#' int2binary(16,5)
+#' int2binary(17,5)
+#' int2binary(31,5)
+int2binary <- function(int, noBits=1+floor(log2(max(int,1L)))) {
+  if(noBits < 1L+floor(log2(int))) warning(sprintf("noBits=%s is not enough", noBits))
+  binary_vector <- rev(as.integer(intToBits(int)))
+  return( binary_vector[-(1:(length(binary_vector) - noBits))] )
+}
+
+#' Dyadic representation of decimal numbers
+#' 
+#' @export
+num2dyadic <- function(num, nmax=256){ # for 0 <num < 1
+  x <- num
+  out <- integer(nmax)
+  i <- 0L
+  j <- 0L
+  while(x>0 && i < nmax){
+         j <- 1L + floor(-log2(x+.Machine$double.eps)) #floor(-log2(x)-.Machine$double.eps) #
+         i <- i + j
+         if(i <= nmax) out[i] <- 1L
+         x <- 2L^j*x - out[i]
+  }
+  if(!all.equal(num, sum(out[1:i]/2^(1:i)))) stop("Incorrect result")
+  return(out[1:i])
+}
+
+#' Dyadic to decimal
+#' 
+#' @export
+dyadic2num <- function(dyadic){ 
+  return(sum(dyadic/2^(seq_along(dyadic))))
+}
