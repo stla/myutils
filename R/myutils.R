@@ -54,16 +54,24 @@ int2binary <- function(int, noBits=1+floor(log2(max(int,1L)))) {
 #' Dyadic representation of decimal numbers
 #' 
 #' @export
-num2dyadic <- function(num, nmax=256){ # for 0 <num < 1
+num2dyadic <- function(num, nmax=52){ # for 0 <= num < 1
+  # 52 = num2dyadic(1-.Machine$double.eps)
   x <- num
   out <- integer(nmax)
   i <- 0L
   j <- 0L
   while(x>0 && i < nmax){
          j <- 1L + floor(-log2(x+.Machine$double.eps)) #floor(-log2(x)-.Machine$double.eps) #
-         i <- i + j
-         if(i <= nmax) out[i] <- 1L
-         x <- 2L^j*x - out[i]
+         #i <- i + j
+         #if(i <= nmax) out[i] <- 1L
+         #x <- 2L^j*x - out[i]
+         if(i+j <= nmax){
+           i <- i + j
+           out[i] <- 1L
+           x <- 2L^j*x - 1L
+         }else{
+           i <- nmax
+         }
   }
   if(!all.equal(num, sum(out[1:i]/2^(1:i)))) stop("Incorrect result")
   return(out[1:i])
