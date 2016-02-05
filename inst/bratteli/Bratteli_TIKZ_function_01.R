@@ -101,7 +101,7 @@ fun_Mn <- Pascal_Mn <- function(n){
   return(M)
 }
 
-fun_Mn <- function (n) 
+fun_Mn <- function (n) # Euler
 {
   M <- matrix(0L, nrow = n + 1, ncol = n + 2)
   for (i in 1:(n + 1)) {
@@ -112,7 +112,7 @@ fun_Mn <- function (n)
 
 LATEXIFY <- TRUE
 ROOTLABEL <- "\\varnothing"
-outfile <- "tikzcode_test04.tex"
+outfile <- "tikzcode_test05.tex"
 fedgelabels <- function(level, from, to) to-from 
 
 N <- 3

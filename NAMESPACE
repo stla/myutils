@@ -2,6 +2,7 @@
 
 export(Bgraph)
 export(blockdiag)
+export(blockdiag_list)
 export(blogify)
 export(charseq)
 export(datify)
