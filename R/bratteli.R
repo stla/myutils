@@ -191,11 +191,12 @@ BgraphTikZ <- function(outfile, fun_Mn, N, fedgelabels="default", ROOTLABEL="\\v
   if(mirror){
     if(!hor) elpos[, y:=max(y)-y] else elpos[, x:=max(x)-x]
   }
-  elpos$level <- rep(nvertices, times=nvertices)-1
+  elpos$level <-  rep(seq_along(nvertices), times=nvertices)-1L
   # scale 
   elpos[, `:=`(x=scale[1]*x, y=scale[2]*y)]
   # node id's
-  elpos[, `:=`(node=myutils::charseq(level+1, LETTERS[level+1])), by="level"]
+  elpos[, `:=`(node=myutils::charseq(.N, LETTERS[level[1]+1])), by="level"]
+  #elpos[, `:=`(node=myutils::charseq(level+1, LETTERS[level+1])), by="level"]
   elpos$nodelabel <- c(ROOTLABEL, unlist(sapply(1:N, function(n) colnames(Mn[[n]]))))
   if(LATEXIFY) elpos[, nodelabel:=myutils::dollarify()(nodelabel)]
   # code for nodes
