@@ -175,7 +175,7 @@ Bgraph <- function(fun_Mn, N, title=NA,
 #' }
 #' BgraphTikZ("/tmp/PascalGraph.tex", Pascal_Mn, 3)
 #' 
-BgraphTikZ <- function(outfile, fun_Mn, N, fedgelabels="default", ROOTLABEL="\\varnothing", LATEXIFY=TRUE, scale=c(50,50), bending=1){
+BgraphTikZ <- function(outfile, fun_Mn, N, fedgelabels="default", ROOTLABEL="\\varnothing", LATEXIFY=TRUE, scale=c(50,50), bending=1, hor=FALSE, mirror=FALSE){
   Mn <- sapply(0:(N-1), function(n) fun_Mn(n))
   for(i in 1:N){
     if(is.null(colnames(Mn[[i]]))) colnames(Mn[[i]]) <- seq_len(ncol(Mn[[i]]))
@@ -186,8 +186,11 @@ BgraphTikZ <- function(outfile, fun_Mn, N, fedgelabels="default", ROOTLABEL="\\v
     left[n] + k 
   }
   nvertices <- c(nvertices, ncol(Mn[[N]]))
-  elpos <- coordinates (nvertices, relsize=1, hor=TRUE) # positions of vertices
+  elpos <- coordinates (nvertices, relsize=1, hor=!hor) # positions of vertices
   elpos <- setNames(data.table(elpos), c("x", "y"))
+  if(mirror){
+    if(!hor) elpos[, y:=max(y)-y] else elpos[, x:=max(x)-x]
+  }
   elpos$level <- rep(nvertices, times=nvertices)-1
   # scale 
   elpos[, `:=`(x=scale[1]*x, y=scale[2]*y)]
@@ -236,8 +239,8 @@ BgraphTikZ <- function(outfile, fun_Mn, N, fedgelabels="default", ROOTLABEL="\\v
   if(edgelabels){
     if(LATEXIFY) connections[, edgelabel:=myutils::dollarify()(edgelabel)]
     drawcode <- Vectorize(function(bend){
-      if(is.na(bend)) return("\\draw[EdgeStyle](%s) to node[LabelStyle]{%s} (%s);")
-      return(paste0(sprintf("\\draw[EdgeStyle, bend left=%s]", bend), "(%s) to node[LabelStyle]{%s} (%s);"))
+      if(is.na(bend)) return("\\draw[EdgeStyle](%s) to node[EdgeLabelStyle]{%s} (%s);")
+      return(paste0(sprintf("\\draw[EdgeStyle, bend left=%s]", bend), "(%s) to node[EdgeLabelStyle]{%s} (%s);"))
     })
     connections[, code:=sprintf(drawcode(bend), node1, edgelabel, node2)]
   }else{
@@ -252,6 +255,7 @@ BgraphTikZ <- function(outfile, fun_Mn, N, fedgelabels="default", ROOTLABEL="\\v
   template <- system.file("templates", "template_BratteliTikZ.RDS", package="myutils")
   texfile <- sprintf(readRDS(template), Code)
   writeLines(texfile, outfile)
+  return(connections)
   return(invisible())
 }
 
