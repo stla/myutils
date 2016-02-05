@@ -1,5 +1,4 @@
-#' Draw a Bratteli graph
-#' 
+#' Draw a Bratteli graph in R
 #' 
 #' @examples 
 #' Pascal_Mn <- function(n){
@@ -158,4 +157,233 @@ Bgraph <- function(fun_Mn, N, title=NA,
       }
     }
   }
+}
+
+
+#' Generate TikZ code of a Bratteli graph
+#' 
+#' @export
+#' @param fedgelabels \code{"default"}, \code{NA}, or a function
+#' @param bending curvature when there are multiple edges
+#' @examples 
+#' Pascal_Mn <- function(n){
+#'  M <- matrix(0, nrow=n+1, ncol=n+2)
+#'  for(i in 1:(n+1)){
+#'    M[i, ][c(i, i+1)] <- 1
+#'  }
+#'  return(M)
+#' }
+#' BgraphTikZ("/tmp/PascalGraph.tex", Pascal_Mn, 3)
+#' 
+BgraphTikZ <- function(outfile, fun_Mn, N, fedgelabels="default", ROOTLABEL="\\varnothing", LATEXIFY=TRUE, scale=c(50,50), bending=1){
+  Mn <- sapply(0:(N-1), function(n) fun_Mn(n))
+  for(i in 1:N){
+    if(is.null(colnames(Mn[[i]]))) colnames(Mn[[i]]) <- seq_len(ncol(Mn[[i]]))
+  }
+  nvertices <- sapply(1:N, function(n) nrow(Mn[[n]])) # number of vertices per level
+  left <- c(0L, cumsum(nvertices))
+  vertex <- function(n,k){ # n: level ; k: vertex at this level 
+    left[n] + k 
+  }
+  nvertices <- c(nvertices, ncol(Mn[[N]]))
+  elpos <- coordinates (nvertices, relsize=1, hor=TRUE) # positions of vertices
+  elpos <- setNames(data.table(elpos), c("x", "y"))
+  elpos$level <- rep(nvertices, times=nvertices)-1
+  # scale 
+  elpos[, `:=`(x=scale[1]*x, y=scale[2]*y)]
+  # node id's
+  elpos[, `:=`(node=myutils::charseq(level+1, LETTERS[level+1])), by="level"]
+  elpos$nodelabel <- c(ROOTLABEL, unlist(sapply(1:N, function(n) colnames(Mn[[n]]))))
+  if(LATEXIFY) elpos[, nodelabel:=myutils::dollarify()(nodelabel)]
+  # code for nodes
+  elpos[, code:=sprintf("\\node[VertexStyle](%s) at (%s, %s) {%s};", node, x, y, nodelabel)]
+  # code for edges
+  connections  <-  data.frame(level=integer(), from=integer(), to=integer(), multiplicity=integer(), node1=character(), node2=character(), stringsAsFactors = FALSE)
+  counter <- 1L
+  for(n in 0:(N-1)){
+    for(i in 1:nrow(Mn[[n+1]])){
+      from <- vertex(n+1,i)
+      for(k in which(Mn[[n+1]][i,]>0)){ 
+        to <- vertex(n+2, k)
+        for(m in 1:Mn[[n+1]][i,k]){
+          connections[counter,]  <- data.frame(n, i, k, Mn[[n+1]][i,k], elpos[from,]$node, elpos[to,]$node, stringsAsFactors = FALSE)
+          counter <- counter+1L
+        }
+      }
+    }
+  }
+  connections <- data.table(connections)
+  connections[, id:=paste0(level,from,to), by=1:nrow(connections)] # connections id's
+  # edge labels
+  if(is.character(fedgelabels) && fedgelabels=="default"){ 
+    edgelabels <- TRUE
+    connections[, edgelabel:=seq_along(to)-1L, by=node1]
+  }
+  if(is.function(fedgelabels)){
+    edgelabels <- TRUE
+    connections[, edgelabel:=fedgelabels(level,from,to)]
+  }
+  if(is.atomic(fedgelabels) && is.na(fedgelabels)){
+    edgelabels <- FALSE
+  }
+  # curvatures
+  fbend <- function(m){
+    if(m==1) return(as.numeric(NA))
+    bend <- seq(0, 10*bending, length.out = m)*(2*m-2)
+    return(bend-mean(bend))
+  }
+  connections[, bend:=fbend(.N), by="id"]
+  if(edgelabels){
+    if(LATEXIFY) connections[, edgelabel:=myutils::dollarify()(edgelabel)]
+    drawcode <- Vectorize(function(bend){
+      if(is.na(bend)) return("\\draw[EdgeStyle](%s) to node[LabelStyle]{%s} (%s);")
+      return(paste0(sprintf("\\draw[EdgeStyle, bend left=%s]", bend), "(%s) to node[LabelStyle]{%s} (%s);"))
+    })
+    connections[, code:=sprintf(drawcode(bend), node1, edgelabel, node2)]
+  }else{
+    drawcode <- Vectorize(function(bend){
+      if(is.na(bend)) return("\\draw[EdgeStyle](%s) to (%s);")
+      return(paste0(sprintf("\\draw[EdgeStyle, bend left=%s]", bend), "(%s) to (%s);"))
+    })
+    connections[, code:=sprintf(drawcode(bend), node1, node2)]
+  }
+  # write code
+  Code <- paste0("\t", c(elpos$code, connections$code), collapse="\n")
+  template <- system.file("templates", "template_BratteliTikZ.RDS", package="myutils")
+  texfile <- sprintf(readRDS(template), Code)
+  writeLines(texfile, outfile)
+  return(invisible())
+}
+
+#' Central kernels on a Bratteli graph
+#' 
+#' @export
+#' @import gmp
+#' 
+#' @examples
+#' #library(gmp)
+#' Euler <- function(n)
+#' {
+#'   M <- matrix(0L, nrow = n + 1, ncol = n + 2)
+#'   for (i in 1:(n + 1)) {
+#'     M[i, ][c(i, i + 1)] <- c(i, n + 2 - i)
+#'   }
+#'   return(M)
+#' }
+#' Bkernels(Euler, 3)
+#' 
+Bkernels <- function(Mn.fun, N){
+  Kernels <- vector("list", N) 
+  # initialization 
+  k <- 0
+  M <- Mn.fun(k)
+  m <- nrow(M); n <- ncol(M)
+  if(m != 1) stop("M0 must have only one row")
+  dims0 <-  as.vector(as.bigz(M))
+  Kernels[[k+1]] <- matrix(as.character(dims0), dimnames=list(1:n, 1:m))
+  for(k in 1:(N-1)){
+    M <- Mn.fun(k)
+    m <- nrow(M); n <- ncol(M)
+    S <- apply(M, 2, function(x) which(x!=0)) 
+    dims <- as.vector(dims0%*%M) 
+    P <- lapply(1:n, function(i){
+      as.character(dims0[S[[i]]]*M[S[[i]],i]/dims[i])
+    })
+    Kernels[[k+1]] <- matrix("0", nrow=n, ncol=m, dimnames=list(1:n,1:m))
+    for(i in 1:n){
+      Kernels[[k+1]][i,][S[[i]]] <- P[[i]]
+    }
+    dims0 <- dims
+  }
+  return(Kernels)
+}
+
+#' Vertices dimensions of a Bratteli graph 
+#' 
+#' @export
+#' 
+#' @examples
+#' Euler <- function(n)
+#' {
+#'   M <- matrix(0L, nrow = n + 1, ncol = n + 2)
+#'   for (i in 1:(n + 1)) {
+#'     M[i, ][c(i, i + 1)] <- c(i, n + 2 - i)
+#'   }
+#'   return(M)
+#' }
+#' Bdims(Euler, 4)
+#' 
+Bdims <- function(Mn.fun, N){
+  Dims <- vector("list", N) 
+  # initialization 
+  k <- 0
+  M <- Mn.fun(k)
+  if(nrow(M) != 1) stop("M0 must have only one row")
+  Dims[[k+1]] <- dims0 <- as.vector(M)
+  for(k in 1:(N-1)){
+    Dims[[k+1]] <- dims0 <- as.vector(dims0 %*% Mn.fun(k)) 
+  }
+  return(Dims)
+}
+
+#' Incidences matrices for a walk on a Bratteli graph
+#' 
+#' @export
+#' 
+#' @examples 
+#' Pascal <- function(n){
+#'  M <- matrix(0, nrow=n+1, ncol=n+2)
+#'  for(i in 1:(n+1)){
+#'    M[i, ][c(i, i+1)] <- 1
+#'  }
+#'  return(M)
+#' }
+#' Bwalk(Pascal, 4, 3)
+#' 
+Bwalk <- function(fun_Mn, N, v){
+  M_N <- fun_Mn(N)
+  Dims <- Bdims(fun_Mn, N+1)
+  colnames(M_N) <- sapply(Dims[[N+1]], function(i) paste0(letters[1:i], collapse=""))
+  rownames(M_N) <- Dims[[N]]
+  QQ <- vector("list", N)
+  QQ[[1]] <- myutils:::Qv(M_N[,v], colnames(M_N)[v], rownames(M_N)) # doit donner Q0
+  i1 <- attr(QQ[[1]], "i0")
+  attr(QQ[[1]], "i0") <- NULL
+  for(i in 1:(N-1)){
+    Mnext <- fun_Mn(N-i)
+    rownames(Mnext) <- Dims[[N-i]]
+    i0 <- i1
+    i1 <- NULL
+    counter <- 1
+    Q1 <- QQ[[i]]
+    Qnext <- list()
+    for(j in 1:nrow(Q1)){
+      for(k in which(Q1[j,]>0)){
+        Q <-  myutils:::Qv(Mnext[,i0[k]], colnames(Q1)[k], rownames(Mnext)) 
+        Qnext[[counter]] <- Q
+        counter <- counter+1
+        i1 <- c(i1, attr(Q, "i0"))
+      }
+    }
+    QQ[[i+1]] <- myutils::blockdiag_list(Qnext)
+  }
+  return(QQ)
+}
+
+#' internal function for Bwalk
+Qv <- function(column, word, dims){
+  names(column) <- dims
+  i0 <- which(column>0)
+  Q0 <- t(column[i0])
+  rownames(Q0) <- word
+  subwords <- character(ncol(Q0))
+  begin <- 1L
+  for(i in 1:ncol(Q0)){
+    end <- begin+as.integer(colnames(Q0)[i])-1L
+    subwords[i] <- stringr::str_sub(word, begin, end)
+    begin <- end+1L
+  }
+  colnames(Q0) <- subwords
+  attr(Q0, "i0") <- unname(i0)
+  return(Q0)
 }

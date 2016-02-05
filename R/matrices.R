@@ -1,4 +1,4 @@
-#' @name matrices
+#' @name blockmatrices
 #' @rdname matrices 
 #' 
 #' @title Block diagonal matrix

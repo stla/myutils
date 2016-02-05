@@ -40,28 +40,28 @@ VerticesDims <- function(Mn.fun, N){
   }
   return(Dims)
 }
-# 
-# fun_Mn <- Pascal_Mn <- function(n){
-#   M <- matrix(0, nrow=n+1, ncol=n+2)
-#   for(i in 1:(n+1)){
-#     M[i, ][c(i, i+1)] <- 1
-#   }
-#   colnames(M) <- paste0(letters[i+1], 1:ncol(M))
-#   return(M)
-# }
-# 
-# centralKernels(fun_Mn, 3)
-# VerticesDims(fun_Mn, 3)
-# 
-# fun_Mn <- function (n) # Euler
-# {
-#   M <- matrix(0L, nrow = n + 1, ncol = n + 2)
-#   for (i in 1:(n + 1)) {
-#     M[i, ][c(i, i + 1)] <- c(i, n + 2 - i)
-#   }
-#   return(M)
-# }
-# 
-# centralKernels(fun_Mn, 3)
-# 
-# VerticesDims(fun_Mn, 3)
+
+fun_Mn <- Pascal_Mn <- function(n){
+  M <- matrix(0, nrow=n+1, ncol=n+2)
+  for(i in 1:(n+1)){
+    M[i, ][c(i, i+1)] <- 1
+  }
+  colnames(M) <- paste0(letters[i+1], 1:ncol(M))
+  return(M)
+}
+
+centralKernels(fun_Mn, 3)
+VerticesDims(fun_Mn, 3)
+
+fun_Mn <- function (n) # Euler
+{
+  M <- matrix(0L, nrow = n + 1, ncol = n + 2)
+  for (i in 1:(n + 1)) {
+    M[i, ][c(i, i + 1)] <- c(i, n + 2 - i)
+  }
+  return(M)
+}
+
+centralKernels(fun_Mn, 3)
+
+VerticesDims(fun_Mn, 3)
