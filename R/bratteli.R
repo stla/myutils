@@ -346,6 +346,7 @@ Bdims <- function(Mn.fun, N){
 #' Bwalk(Pascal, 4, 3)
 #' 
 Bwalk <- function(fun_Mn, N, v){
+  .Deprecated("Bwalk_powers")
   M_N <- fun_Mn(N)
   Dims <- Bdims(fun_Mn, N+1)
   colnames(M_N) <- sapply(Dims[[N+1]], function(i) paste0(letters[1:i], collapse=""))
@@ -425,7 +426,7 @@ Qv_powers <- function(column, power, dims){
 #' }
 #' Bwalk_powers(Pascal, 4, 3)
 #' 
-Bwalk_powers <- function(fun_Mn, N, v){
+Bwalk_powers <- function(fun_Mn, N, v, labels=c("powers", "words")){
   M_N <- fun_Mn(N)
   Dims <- myutils::Bdims(fun_Mn, N+1)
   colnames(M_N) <- rep(0, ncol(M_N)) # sapply(Dims[[N+1]], function(i) paste0(letters[1:i], collapse=""))
@@ -433,6 +434,7 @@ Bwalk_powers <- function(fun_Mn, N, v){
   QQ <- vector("list", N)
   QQ[[1]] <- myutils:::Qv_powers(M_N[,v], as.integer(colnames(M_N)[v]), dims) 
   i1 <- attr(QQ[[1]], "i0")
+  attr(QQ[[1]], "dims") <- list(rows=Dims[[N+1]][v], cols=dims[i1])
   attr(QQ[[1]], "i0") <- NULL
   for(i in 1:(N-1)){
     Mnext <- fun_Mn(N-i)
@@ -450,7 +452,43 @@ Bwalk_powers <- function(fun_Mn, N, v){
         i1 <- c(i1, attr(Q, "i0"))
       }
     }
-    QQ[[i+1]] <- myutils::blockdiag_list(Qnext)
+    if(length(Qnext)==1L){
+      QQ[[i+1]] <- Qnext[[1]]
+      attr(QQ[[i+1]], "i0") <- NULL
+    }else{
+      QQ[[i+1]] <- myutils::blockdiag_list(Qnext) 
+    }
+    attr(QQ[[i+1]], "dims") <- list(rows=attr(QQ[[i]], "dims")$cols, cols=dims[i1])
   }
-  return(QQ)
+  # Kernels
+  # library(gmp)
+  Kernels <- lapply(QQ, function(P){
+    Pcopy <- gmp::as.bigq(matrix(0, nrow=nrow(P), ncol=ncol(P)))
+    dims <- attr(P, "dims")
+    for(i in 1:nrow(P)){
+      j <- which(P[i,]!=0)
+      Pcopy[i,j] <- gmp::as.bigq(dims$cols[j], dims$rows[i])
+    }
+    return(Pcopy)
+  })
+  # word labels 
+  labels <- match.arg(labels)
+  if(labels=="words"){
+    L <- attr(QQ[[1]], "dims")$rows
+    if(L <= 52){ 
+      word0 <- c(letters,LETTERS)[1:L]
+      f <- Vectorize(function(first, length){
+        paste0(word0[(first+1):(first+length)], collapse="")
+      })
+      for(n in 1:N){
+        dims <- attr(QQ[[n]], "dims")
+        rownames(QQ[[n]]) <- f(as.integer(rownames(QQ[[n]])), dims$rows)
+        colnames(QQ[[n]]) <- f(as.integer(colnames(QQ[[n]])), dims$cols)
+        attr(QQ[[n]], "dims") <- NULL
+      }
+    }else{
+      cat("Words too long")
+    }
+  }
+  return(list(Mn=QQ, Pn=Kernels))
 }

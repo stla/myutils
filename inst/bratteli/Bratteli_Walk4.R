@@ -42,8 +42,6 @@ Bwalk_powers <- function(fun_Mn, N, v, labels=c("powers", "words")){
   QQ <- vector("list", N)
   QQ[[1]] <- myutils:::Qv_powers(M_N[,v], as.integer(colnames(M_N)[v]), dims) 
   i1 <- attr(QQ[[1]], "i0")
-#   attr(QQ[[1]], "dimsrows") <- Dims[[N+1]][v]
-#   attr(QQ[[1]], "dimscols") <- dims[i1] 
   attr(QQ[[1]], "dims") <- list(rows=Dims[[N+1]][v], cols=dims[i1])
   attr(QQ[[1]], "i0") <- NULL
   for(i in 1:(N-1)){
@@ -62,9 +60,12 @@ Bwalk_powers <- function(fun_Mn, N, v, labels=c("powers", "words")){
         i1 <- c(i1, attr(Q, "i0"))
       }
     }
-    QQ[[i+1]] <- myutils::blockdiag_list(Qnext)
-#     attr(QQ[[i+1]], "dimscols") <- dims[i1]
-#     attr(QQ[[i+1]], "dimsrows") <- attr(QQ[[i]], "dimscols")
+    if(length(Qnext)==1L){
+      QQ[[i+1]] <- Qnext[[1]]
+      attr(QQ[[i+1]], "i0") <- NULL
+    }else{
+      QQ[[i+1]] <- myutils::blockdiag_list(Qnext) 
+    }
     attr(QQ[[i+1]], "dims") <- list(rows=attr(QQ[[i]], "dims")$cols, cols=dims[i1])
   }
   # Kernels
