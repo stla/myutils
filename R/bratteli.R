@@ -331,7 +331,7 @@ Bdims <- function(Mn.fun, N){
   return(Dims)
 }
 
-#' Incidences matrices for a walk on a Bratteli graph
+#' Incidences matrices for a walk on a Bratteli graph - walk on words
 #' 
 #' @export
 #' 
@@ -391,4 +391,66 @@ Qv <- function(column, word, dims){
   colnames(Q0) <- subwords
   attr(Q0, "i0") <- unname(i0)
   return(Q0)
+}
+
+#' internal function for Bwalk_powers
+Qv_powers <- function(column, power, dims){
+  names(column) <- dims
+  i0 <- which(column>0)
+  Q0 <- t(column[i0])
+  rownames(Q0) <- power
+  powers <- integer(ncol(Q0))
+  begin <- 0L
+  for(i in 1:ncol(Q0)){
+    end <- begin+as.integer(colnames(Q0)[i])-1L
+    powers[i] <- begin # stringr::str_sub(word, begin, end)
+    begin <- end+1L
+  }
+  colnames(Q0) <- powers + power
+  attr(Q0, "i0") <- unname(i0)
+  return(Q0)
+}
+
+#' Incidences matrices for a walk on a Bratteli graph - walk on powers
+#' 
+#' @export
+#' 
+#' @examples 
+#' Pascal <- function(n){
+#'  M <- matrix(0, nrow=n+1, ncol=n+2)
+#'  for(i in 1:(n+1)){
+#'    M[i, ][c(i, i+1)] <- 1
+#'  }
+#'  return(M)
+#' }
+#' Bwalk_powers(Pascal, 4, 3)
+#' 
+Bwalk_powers <- function(fun_Mn, N, v){
+  M_N <- fun_Mn(N)
+  Dims <- myutils::Bdims(fun_Mn, N+1)
+  colnames(M_N) <- rep(0, ncol(M_N)) # sapply(Dims[[N+1]], function(i) paste0(letters[1:i], collapse=""))
+  dims <- Dims[[N]]
+  QQ <- vector("list", N)
+  QQ[[1]] <- myutils:::Qv_powers(M_N[,v], as.integer(colnames(M_N)[v]), dims) 
+  i1 <- attr(QQ[[1]], "i0")
+  attr(QQ[[1]], "i0") <- NULL
+  for(i in 1:(N-1)){
+    Mnext <- fun_Mn(N-i)
+    dims <-  Dims[[N-i]] #rownames(Mnext) <- Dims[[N-i]]
+    i0 <- i1
+    i1 <- NULL
+    counter <- 1
+    Q1 <- QQ[[i]]
+    Qnext <- list()
+    for(j in 1:nrow(Q1)){
+      for(k in which(Q1[j,]>0)){
+        Q <-  myutils:::Qv_powers(Mnext[,i0[k]], as.integer(colnames(Q1)[k]), dims) 
+        Qnext[[counter]] <- Q
+        counter <- counter+1
+        i1 <- c(i1, attr(Q, "i0"))
+      }
+    }
+    QQ[[i+1]] <- myutils::blockdiag_list(Qnext)
+  }
+  return(QQ)
 }

@@ -34,6 +34,8 @@ number2binary <- function(number, noBits=1+floor(log2(max(number,1)))) {
 
 #' Binary representation of integers
 #' 
+#' @export
+#' 
 #' @examples
 #' int2binary(1,1)
 #' int2binary(3,2)
