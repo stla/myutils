@@ -18,5 +18,6 @@ fedgelabels <- Vectorize(function(n, from, to) as.character(gmp::as.bigq(nchar(c
 BgraphTikZ("tikz_Bwalk2.tex", function(n) Mn[[n+1]], 3, 
            fedgelabels = fedgelabels, 
            ROOTLABEL=rownames(Mn[[1]]),
-           mirror=TRUE, hor=TRUE)
+           mirror=TRUE, hor=TRUE,
+           packages="nicefrac")
 

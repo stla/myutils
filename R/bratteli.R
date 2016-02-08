@@ -175,7 +175,11 @@ Bgraph <- function(fun_Mn, N, title=NA,
 #' }
 #' BgraphTikZ("/tmp/PascalGraph.tex", Pascal_Mn, 3)
 #' 
-BgraphTikZ <- function(outfile, fun_Mn, N, fedgelabels="default", ROOTLABEL="\\varnothing", LATEXIFY=TRUE, scale=c(50,50), bending=1, hor=FALSE, mirror=FALSE){
+BgraphTikZ <- function(outfile, fun_Mn, N, fedgelabels="default", 
+                       ROOTLABEL="\\varnothing", LATEXIFY=TRUE, 
+                       packages=NULL, 
+                       scale=c(50,50), bending=1, 
+                       hor=FALSE, mirror=FALSE){
   Mn <- sapply(0:(N-1), function(n) fun_Mn(n))
   for(i in 1:N){
     if(is.null(colnames(Mn[[i]]))) colnames(Mn[[i]]) <- seq_len(ncol(Mn[[i]]))
@@ -251,10 +255,17 @@ BgraphTikZ <- function(outfile, fun_Mn, N, fedgelabels="default", ROOTLABEL="\\v
     })
     connections[, code:=sprintf(drawcode(bend), node1, node2)]
   }
-  # write code
+  # TikZ code
   Code <- paste0("\t", c(elpos$code, connections$code), collapse="\n")
-  template <- system.file("templates", "template_BratteliTikZ.RDS", package="myutils")
-  texfile <- sprintf(readRDS(template), Code)
+  # add packages
+  if(!is.null(packages)){
+    packages <- sapply(packages, function(x) sprintf("\\usepackage{%s}\n", x))
+  }else{
+    packages <- ""
+  }
+  # write code to template
+  template <- system.file("templates", "template_BratteliTikZ2.RDS", package="myutils")
+  texfile <- sprintf(readRDS(template), packages, Code)
   writeLines(texfile, outfile)
   return(connections)
   return(invisible())
