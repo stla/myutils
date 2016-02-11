@@ -15,9 +15,10 @@ Mn <- MMn <- Bwalk(Pascal, N, 3)
 
 fedgelabels <- Vectorize(function(n, from, to) as.character(gmp::as.bigq(nchar(colnames(MMn[[n+1]])[to]), nchar(rownames(MMn[[n+1]])[from]))))
 
-BgraphTikZ("tikz_Bwalk2.tex", function(n) Mn[[n+1]], 3, 
+BgraphTikZ("tikz_Bwalk_northsouth.tex", function(n) Mn[[n+1]], 3, 
            fedgelabels = fedgelabels, 
            ROOTLABEL=rownames(Mn[[1]]),
-           mirror=TRUE, hor=TRUE,
-           packages="nicefrac")
+           mirror=TRUE, hor=FALSE,
+           packages="nicefrac",
+          northsouth = FALSE)
 

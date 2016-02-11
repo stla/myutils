@@ -165,6 +165,7 @@ Bgraph <- function(fun_Mn, N, title=NA,
 #' @export
 #' @param fedgelabels \code{"default"}, \code{NA}, or a function
 #' @param bending curvature when there are multiple edges
+#' @param northsouth node connections
 #' @examples 
 #' Pascal_Mn <- function(n){
 #'  M <- matrix(0, nrow=n+1, ncol=n+2)
@@ -175,11 +176,14 @@ Bgraph <- function(fun_Mn, N, title=NA,
 #' }
 #' BgraphTikZ("/tmp/PascalGraph.tex", Pascal_Mn, 3)
 #' 
-BgraphTikZ <- function(outfile, fun_Mn, N, fedgelabels="default", 
+BgraphTikZ <- function(outfile, fun_Mn, N, 
+                       fedgelabels="default", 
+                       fvertexlabels=NULL, 
                        ROOTLABEL="\\varnothing", LATEXIFY=TRUE, 
                        packages=NULL, 
                        scale=c(50,50), bending=1, 
-                       hor=FALSE, mirror=FALSE){
+                       hor=FALSE, mirror=FALSE, 
+                       northsouth=FALSE){
   Mn <- sapply(0:(N-1), function(n) fun_Mn(n))
   for(i in 1:N){
     if(is.null(colnames(Mn[[i]]))) colnames(Mn[[i]]) <- seq_len(ncol(Mn[[i]]))
@@ -201,7 +205,8 @@ BgraphTikZ <- function(outfile, fun_Mn, N, fedgelabels="default",
   # node id's
   elpos[, `:=`(node=myutils::charseq(.N, LETTERS[level[1]+1])), by="level"]
   #elpos[, `:=`(node=myutils::charseq(level+1, LETTERS[level+1])), by="level"]
-  elpos$nodelabel <- c(ROOTLABEL, unlist(sapply(1:N, function(n) colnames(Mn[[n]]))))
+  if(is.null(fvertexlabels)) fvertexlabels <- function(n) colnames(Mn[[n]])
+  elpos$nodelabel <- c(ROOTLABEL, unlist(sapply(1:N, function(n) fvertexlabels(n))))
   if(LATEXIFY) elpos[, nodelabel:=myutils::dollarify()(nodelabel)]
   # code for nodes
   elpos[, code:=sprintf("\\node[VertexStyle](%s) at (%s, %s) {%s};", node, x, y, nodelabel)]
@@ -244,14 +249,14 @@ BgraphTikZ <- function(outfile, fun_Mn, N, fedgelabels="default",
   if(edgelabels){
     if(LATEXIFY) connections[, edgelabel:=myutils::dollarify()(edgelabel)]
     drawcode <- Vectorize(function(bend){
-      if(is.na(bend)) return("\\draw[EdgeStyle](%s) to node[EdgeLabelStyle]{%s} (%s);")
-      return(paste0(sprintf("\\draw[EdgeStyle, bend left=%s]", bend), "(%s) to node[EdgeLabelStyle]{%s} (%s);"))
+      if(is.na(bend)) return(ifelse(northsouth, "\\draw[EdgeStyle](%s.south) to node[EdgeLabelStyle]{%s} (%s.north);", "\\draw[EdgeStyle](%s) to node[EdgeLabelStyle]{%s} (%s);"))
+      return(paste0(sprintf("\\draw[EdgeStyle, bend left=%s]", bend), ifelse(northsouth, "(%s.south) to node[EdgeLabelStyle]{%s} (%s.north);", "(%s) to node[EdgeLabelStyle]{%s} (%s);")))
     })
     connections[, code:=sprintf(drawcode(bend), node1, edgelabel, node2)]
   }else{
     drawcode <- Vectorize(function(bend){
-      if(is.na(bend)) return("\\draw[EdgeStyle](%s) to (%s);")
-      return(paste0(sprintf("\\draw[EdgeStyle, bend left=%s]", bend), "(%s) to (%s);"))
+      if(is.na(bend)) return(ifelse(northsouth, "\\draw[EdgeStyle](%s.south) to (%s.north);", "\\draw[EdgeStyle](%s) to (%s);"))
+      return(paste0(sprintf("\\draw[EdgeStyle, bend left=%s]", bend), ifelse(northsouth, "(%s.south) to (%s.north);", "(%s) to (%s);")))
     })
     connections[, code:=sprintf(drawcode(bend), node1, node2)]
   }
