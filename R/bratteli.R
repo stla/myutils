@@ -227,6 +227,8 @@ BgraphTikZ <- function(outfile, fun_Mn, N,
   }
   connections <- data.table(connections)
   connections[, id:=paste0(level,from,to), by=1:nrow(connections)] # connections id's
+  ## indice multiplicité
+  connections[, `:=`(mindex=seq_len(.N)), by="id"]
   # edge labels
   if(is.character(fedgelabels) && fedgelabels=="default"){ 
     edgelabels <- TRUE
@@ -234,7 +236,7 @@ BgraphTikZ <- function(outfile, fun_Mn, N,
   }
   if(is.function(fedgelabels)){
     edgelabels <- TRUE
-    connections[, edgelabel:=fedgelabels(level,from,to)]
+    connections[, edgelabel:=fedgelabels(level,from,to,mindex)]
   }
   if(is.atomic(fedgelabels) && is.na(fedgelabels)){
     edgelabels <- FALSE
