@@ -307,7 +307,7 @@ Bkernels <- function(Mn.fun, N){
   for(k in 1:(N-1)){
     M <- Mn.fun(k)
     m <- nrow(M); n <- ncol(M)
-    S <- apply(M, 2, function(x) which(x!=0)) 
+    S <- lapply(1:ncol(M), function(i) which(M[,i]!=0)) 
     dims <- as.vector(dims0%*%M) 
     P <- lapply(1:n, function(i){
       as.character(dims0[S[[i]]]*M[S[[i]],i]/dims[i])
