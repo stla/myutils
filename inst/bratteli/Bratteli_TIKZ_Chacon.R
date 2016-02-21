@@ -85,6 +85,12 @@ fedgelabels <- Vectorize(function(n, from, to, mindex){
   if(is.atomic(fedgelabels) && is.na(fedgelabels)){
     edgelabels <- FALSE
   }
+  
+  ### xxx 
+  connections[, edgelabel:=seq_len(.N)-1L, by=node2]
+  ### xxxx
+  
+  
   # curvatures
   fbend <- function(m){
     if(m==1) return(as.numeric(NA))

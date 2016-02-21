@@ -163,7 +163,7 @@ Bgraph <- function(fun_Mn, N, title=NA,
 #' Generate TikZ code of a Bratteli graph
 #' 
 #' @export
-#' @param fedgelabels \code{"default"}, \code{NA}, or a function
+#' @param fedgelabels \code{"default"}, \code{"default_letters"}, \code{"order"}, \code{NA}, or a function
 #' @param bending curvature when there are multiple edges
 #' @param northsouth node connections
 #' @examples 
@@ -230,9 +230,11 @@ BgraphTikZ <- function(outfile, fun_Mn, N,
   ## indice multiplicité
   connections[, `:=`(mindex=seq_len(.N)), by="id"]
   # edge labels
-  if(is.character(fedgelabels) && fedgelabels=="default"){ 
+  if(is.character(fedgelabels)){ 
     edgelabels <- TRUE
-    connections[, edgelabel:=seq_along(to)-1L, by=node1]
+    if(fedgelabels=="default") connections[, edgelabel:=seq_along(to)-1L, by=node1]
+    if(fedgelabels=="default_letters") connections[, edgelabel:=letters[seq_along(to)], by=node1]
+    if(fedgelabels=="order") connections[, edgelabel:=seq_len(.N)-1L, by=node2]
   }
   if(is.function(fedgelabels)){
     edgelabels <- TRUE
@@ -274,7 +276,7 @@ BgraphTikZ <- function(outfile, fun_Mn, N,
   template <- system.file("templates", "template_BratteliTikZ2.RDS", package="myutils")
   texfile <- sprintf(readRDS(template), packages, Code)
   writeLines(texfile, outfile)
-  return(connections)
+  #return(connections)
   return(invisible())
 }
 
