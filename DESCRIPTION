@@ -15,5 +15,6 @@ Imports:
     tikzDevice,
     jsonlite,
     diagram,
-    gmp
+    gmp,
+    kantorovich
 RoxygenNote: 5.0.1
