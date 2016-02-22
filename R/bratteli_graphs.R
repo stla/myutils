@@ -163,7 +163,7 @@ Bgraph <- function(fun_Mn, N, title=NA,
 #' Generate TikZ code of a Bratteli graph
 #' 
 #' @export
-#' @param fedgelabels \code{"default"}, \code{"default_letters"}, \code{"order"}, \code{NA}, or a function
+#' @param fedgelabels \code{"default"}, \code{"default_letters"}, \code{"order"}, \code{NA}, or a VECTORIZED function
 #' @param bending curvature when there are multiple edges
 #' @param northsouth node connections
 #' @examples 

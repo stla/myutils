@@ -15,7 +15,8 @@
 #' }
 #' Bkernels(Euler, 3)
 #' 
-Bkernels <- function(Mn.fun, N){
+Bkernels <- function(Mn.fun, N, class=c("character", "bigq")){
+  if(is.null(sessionInfo()$otherPkgs) || !"gmp" %in% names(sessionInfo()$otherPkgs)) stop("load the gmp package")
   Kernels <- vector("list", N) 
   # initialization 
   k <- 0
@@ -38,6 +39,7 @@ Bkernels <- function(Mn.fun, N){
     }
     dims0 <- dims
   }
+  if(match.arg(class)=="bigq") Kernels <- lapply(Kernels, as.bigq)
   return(Kernels)
 }
 
