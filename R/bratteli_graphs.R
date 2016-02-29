@@ -163,7 +163,8 @@ Bgraph <- function(fun_Mn, N, title=NA,
 #' Generate TikZ code of a Bratteli graph
 #' 
 #' @export
-#' @param fedgelabels \code{"default"}, \code{"default_letters"}, \code{"order"}, \code{NA}, or a VECTORIZED function
+#' @param fedgelabels \code{"default"}, \code{"default_letters"}, \code{"order"}, \code{"kernels"}, \code{NA}, or a VECTORIZED function
+#' @param fvertexlabels \code{"colnames"} (default) to use the column names of the matrices, \code{"dims"} to use the dimensions of the vertices, or a VECTORIZED(?) function
 #' @param bending curvature when there are multiple edges
 #' @param northsouth node connections
 #' @examples 
@@ -178,7 +179,7 @@ Bgraph <- function(fun_Mn, N, title=NA,
 #' 
 BgraphTikZ <- function(outfile, fun_Mn, N, 
                        fedgelabels="default", 
-                       fvertexlabels=NULL, 
+                       fvertexlabels="colnames", 
                        ROOTLABEL="\\varnothing", LATEXIFY=TRUE, 
                        packages=NULL, 
                        scale=c(50,50), bending=1, 
@@ -205,7 +206,13 @@ BgraphTikZ <- function(outfile, fun_Mn, N,
   # node id's
   elpos[, `:=`(node=myutils::charseq(.N, LETTERS[level[1]+1])), by="level"]
   #elpos[, `:=`(node=myutils::charseq(level+1, LETTERS[level+1])), by="level"]
-  if(is.null(fvertexlabels)) fvertexlabels <- function(n) colnames(Mn[[n]])
+  if(is.character(fvertexlabels)){
+    if(fvertexlabels=="colnames") fvertexlabels <- function(n) colnames(Mn[[n]])
+    if(fvertexlabels=="dims"){
+      dims <- myutils::Bdims(fun_Mn, N)
+      fvertexlabels <- function(n) dims[[n]]
+    }
+  }
   elpos$nodelabel <- c(ROOTLABEL, unlist(sapply(1:N, function(n) fvertexlabels(n))))
   if(LATEXIFY) elpos[, nodelabel:=myutils::dollarify()(nodelabel)]
   # code for nodes
@@ -235,6 +242,18 @@ BgraphTikZ <- function(outfile, fun_Mn, N,
     if(fedgelabels=="default") connections[, edgelabel:=seq_along(to)-1L, by=node1]
     if(fedgelabels=="default_letters") connections[, edgelabel:=letters[seq_along(to)], by=node1]
     if(fedgelabels=="order") connections[, edgelabel:=seq_len(.N)-1L, by=node2]
+    if(fedgelabels=="kernels"){
+      if(!is.element("nicefrac", packages)) packages <- c(packages, "nicefrac")
+      require(gmp, quietly = TRUE)
+      ckernels <- myutils::Bkernels(fun_Mn, N, class="bigq")
+      ckernels_numer <- lapply(ckernels, function(x) as.character(numerator(x)))
+      ckernels_denom <- lapply(ckernels, function(x) as.character(denominator(x)))
+      f <- Vectorize(function(level, from, to){
+        if(ckernels_denom[[level+1]][to,from]=="1") return("1")
+        sprintf("\\nicefrac{%s}{%s}", ckernels_numer[[level+1]][to,from], ckernels_denom[[level+1]][to,from])
+      })
+      connections[, edgelabel:=f(level,from,to)]
+    }
   }
   if(is.function(fedgelabels)){
     edgelabels <- TRUE

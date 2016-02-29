@@ -47,6 +47,14 @@ fedgelabels <- Vectorize(function(n, from, to, mindex){
   elpos[, `:=`(node=myutils::charseq(.N, LETTERS[level[1]+1])), by="level"]
   #elpos[, `:=`(node=myutils::charseq(level+1, LETTERS[level+1])), by="level"]
   if(is.null(fvertexlabels)) fvertexlabels <- function(n) colnames(Mn[[n]])
+  
+  ### xxx
+  if(is.character(fvertexlabels) && fvertexlabels=="dims"){
+    dims <- myutils::Bdims(fun_Mn, N)
+    fvertexlabels <- function(n) dims[[n]]
+  }
+  ### xxx
+  
   elpos$nodelabel <- c(ROOTLABEL, unlist(sapply(1:N, function(n) fvertexlabels(n))))
   if(LATEXIFY) elpos[, nodelabel:=myutils::dollarify()(nodelabel)]
   # code for nodes
@@ -74,9 +82,23 @@ fedgelabels <- Vectorize(function(n, from, to, mindex){
   ##
   
   # edge labels
-  if(is.character(fedgelabels) && fedgelabels=="default"){ 
+  
+
+  ### xxx
+  
+  if(is.character(fedgelabels)){ 
     edgelabels <- TRUE
-    connections[, edgelabel:=seq_along(to)-1L, by=node1]
+    if(fedgelabels=="default") connections[, edgelabel:=seq_along(to)-1L, by=node1]
+    if(fedgelabels=="kernels"){
+      ckernels <- myutils::Bkernels(fun_Mn, N, class="bigq")
+      ckernels_numer <- lapply(ckernels, function(x) as.character(numerator(x)))
+      ckernels_denom <- lapply(ckernels, function(x) as.character(denominator(x)))
+      f <- Vectorize(function(level, from, to){
+        if(ckernels_denom[[level+1]][to,from]=="1") return("1")
+        sprintf("\\nicefrac{%s}{%s}", ckernels_numer[[level+1]][to,from], ckernels_denom[[level+1]][to,from])
+      })
+      connections[, edgelabel:=f(level,from,to)]
+    }
   }
   if(is.function(fedgelabels)){
     edgelabels <- TRUE
