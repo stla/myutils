@@ -163,8 +163,8 @@ Bgraph <- function(fun_Mn, N, title=NA,
 #' Generate TikZ code of a Bratteli graph
 #' 
 #' @export
-#' @param fedgelabels \code{"default"}, \code{"default_letters"}, \code{"order"}, \code{"kernels"}, \code{NA}, or a VECTORIZED function
-#' @param fvertexlabels \code{"colnames"} (default) to use the column names of the matrices, \code{"dims"} to use the dimensions of the vertices, or a VECTORIZED(?) function
+#' @param edgelabels \code{"default"}, \code{"default_letters"}, \code{"order"}, \code{"kernels"}, \code{NA}, or a VECTORIZED function
+#' @param vertexlabels \code{"colnames"} (default) to use the column names of the matrices, \code{"dims"} to use the dimensions of the vertices, or a VECTORIZED(?) function
 #' @param bending curvature when there are multiple edges
 #' @param northsouth node connections
 #' @examples 
@@ -178,8 +178,8 @@ Bgraph <- function(fun_Mn, N, title=NA,
 #' BgraphTikZ("/tmp/PascalGraph.tex", Pascal_Mn, 3)
 #' 
 BgraphTikZ <- function(outfile, fun_Mn, N, 
-                       fedgelabels="default", 
-                       fvertexlabels="colnames", 
+                       edgelabels="default", 
+                       vertexlabels="colnames", 
                        ROOTLABEL="\\varnothing", LATEXIFY=TRUE, 
                        packages=NULL, 
                        scale=c(50,50), bending=1, 
@@ -206,9 +206,9 @@ BgraphTikZ <- function(outfile, fun_Mn, N,
   # node id's
   elpos[, `:=`(node=myutils::charseq(.N, LETTERS[level[1]+1])), by="level"]
   #elpos[, `:=`(node=myutils::charseq(level+1, LETTERS[level+1])), by="level"]
-  if(is.character(fvertexlabels)){
-    if(fvertexlabels=="colnames") fvertexlabels <- function(n) colnames(Mn[[n]])
-    if(fvertexlabels=="dims"){
+  if(is.character(vertexlabels)){
+    if(vertexlabels=="colnames") fvertexlabels <- function(n) colnames(Mn[[n]])
+    if(vertexlabels=="dims"){
       dims <- myutils::Bdims(fun_Mn, N)
       fvertexlabels <- function(n) dims[[n]]
     }
@@ -237,12 +237,12 @@ BgraphTikZ <- function(outfile, fun_Mn, N,
   ## indice multiplicité
   connections[, `:=`(mindex=seq_len(.N)), by="id"]
   # edge labels
-  if(is.character(fedgelabels)){ 
-    edgelabels <- TRUE
-    if(fedgelabels=="default") connections[, edgelabel:=seq_along(to)-1L, by=node1]
-    if(fedgelabels=="default_letters") connections[, edgelabel:=letters[seq_along(to)], by=node1]
-    if(fedgelabels=="order") connections[, edgelabel:=seq_len(.N)-1L, by=node2]
-    if(fedgelabels=="kernels"){
+  if(is.character(edgelabels)){ 
+    labels_on_edge <- TRUE
+    if(edgelabels=="default") connections[, edgelabel:=seq_along(to)-1L, by=node1]
+    if(edgelabels=="default_letters") connections[, edgelabel:=letters[seq_along(to)], by=node1]
+    if(edgelabels=="order") connections[, edgelabel:=seq_len(.N)-1L, by=node2]
+    if(edgelabels=="kernels"){
       if(!is.element("nicefrac", packages)) packages <- c(packages, "nicefrac")
       require(gmp, quietly = TRUE)
       ckernels <- myutils::Bkernels(fun_Mn, N, class="bigq")
@@ -255,12 +255,12 @@ BgraphTikZ <- function(outfile, fun_Mn, N,
       connections[, edgelabel:=f(level,from,to)]
     }
   }
-  if(is.function(fedgelabels)){
-    edgelabels <- TRUE
-    connections[, edgelabel:=fedgelabels(level,from,to,mindex)]
+  if(is.function(edgelabels)){
+    labels_on_edge <- TRUE
+    connections[, edgelabel:=edgelabels(level,from,to,mindex)]
   }
-  if(is.atomic(fedgelabels) && is.na(fedgelabels)){
-    edgelabels <- FALSE
+  if(is.atomic(edgelabels) && is.na(edgelabels)){
+    labels_on_edge <- FALSE
   }
   # curvatures
   fbend <- function(m){
@@ -269,7 +269,7 @@ BgraphTikZ <- function(outfile, fun_Mn, N,
     return(bend-mean(bend))
   }
   connections[, bend:=fbend(.N), by="id"]
-  if(edgelabels){
+  if(labels_on_edge){
     if(LATEXIFY) connections[, edgelabel:=myutils::dollarify()(edgelabel)]
     drawcode <- Vectorize(function(bend){
       if(is.na(bend)) return(ifelse(northsouth, "\\draw[EdgeStyle](%s.south) to node[EdgeLabelStyle]{%s} (%s.north);", "\\draw[EdgeStyle](%s) to node[EdgeLabelStyle]{%s} (%s);"))

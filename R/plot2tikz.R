@@ -60,7 +60,7 @@ plot2tikz <- function(code, filename="Rplot", outdir=getwd(), overwrite=FALSE, f
 #     do.call(function(...) tikz(texfile, standAlone=TRUE, onefile=FALSE, packages=packages, ...), extra.args)
     if(is.null(packages)){
       if(format=="pdf") packages <- getOption("tikzLatexPackages")
-      if(format=="eps") packages <- "\\usepackage{tikz}\n"
+      if(format=="eps") packages <- c("\\thispagestyle{empty}\n", "\\usepackage{tikz}\n")
     } else {
       if(!"\\usepackage{tikz}\n" %in% packages){
         packages <- c("\\usepackage{tikz}\n", packages)
