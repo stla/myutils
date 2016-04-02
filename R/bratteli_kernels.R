@@ -33,7 +33,8 @@ Bkernels <- function(Mn.fun, N, class=c("character", "bigq")){
     P <- lapply(1:n, function(i){
       as.character(dims0[S[[i]]]*M[S[[i]],i]/dims[i])
     })
-    Kernels[[k+1]] <- matrix("0", nrow=n, ncol=m, dimnames=list(1:n,1:m))
+    #Kernels[[k+1]] <- matrix("0", nrow=n, ncol=m, dimnames=list(1:n,1:m))
+    Kernels[[k+1]] <- matrix("0", nrow=n, ncol=m, dimnames=dimnames(t(M)))
     for(i in 1:n){
       Kernels[[k+1]][i,][S[[i]]] <- P[[i]]
     }
@@ -98,9 +99,10 @@ Bmetrics <- function(Mn.fun, N){
     for(i in 1:(K-1)){
       for(j in (i+1):K){
         RHO[[k+1]][i,j] <- RHO[[k+1]][j,i] <- 
-          as.character(kantorovich(as.bigq(kernel[i,]), as.bigq(kernel[j,]), dist = RHO[[k]]))
+          as.character(kantorovich(as.bigq(kernel[i,]), as.bigq(kernel[j,]), dist = unname(RHO[[k]])))
       }
     }
+    dimnames(RHO[[k+1]]) <- list(colnames(Mn.fun(k)), colnames(Mn.fun(k)))
   }
   return(RHO)
 }

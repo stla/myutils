@@ -1,3 +1,18 @@
+#' String to letters
+#' 
+#' @description Separate the letters of a character string
+#' 
+#' @param string a character string
+#' @return a character vector
+#' @examples
+#' # this returns c("h", "e", "l", "l", "o"):
+#' string2letters("hello") 
+#' @export
+string2letters <- function(string){
+  rawToChar(charToRaw(string), multiple = TRUE)
+}
+
+
 #' Generates 001, 002, ...
 #' 
 #' @examples
