@@ -382,6 +382,10 @@ Qv_powers <- function(column, power, dims){
 
 #' Incidences matrices for a walk on a Bratteli graph - walk on powers
 #' 
+#' @param N level
+#' @param v vertex at level \code{N}, in \code{1:ncol(fun_Mn(N))}
+#' @param splitted_word the word splitted on the graph, if \code{labels=words}
+#' 
 #' @export
 #' 
 #' @examples 
@@ -394,7 +398,7 @@ Qv_powers <- function(column, power, dims){
 #' }
 #' Bwalk_powers(Pascal, 4, 3)
 #' 
-Bwalk_powers <- function(fun_Mn, N, v, labels=c("powers", "words")){
+Bwalk_powers <- function(fun_Mn, N, v, labels=c("powers", "words"), splitted_word="default"){
   M_N <- fun_Mn(N)
   Dims <- myutils::Bdims(fun_Mn, N+1)
   colnames(M_N) <- rep(0, ncol(M_N)) # sapply(Dims[[N+1]], function(i) paste0(letters[1:i], collapse=""))
@@ -443,8 +447,15 @@ Bwalk_powers <- function(fun_Mn, N, v, labels=c("powers", "words")){
   labels <- match.arg(labels)
   if(labels=="words"){
     L <- attr(QQ[[1]], "dims")$rows
-    if(L <= 52){ 
+    if(splitted_word != "default"){
+      if(nchar(splitted_word) != L){
+        stop(sprintf("Your splitted word has not the good length (%s instead of %s)", nchar(splitted_word), L))
+      }
+      word0 <- myutils::string2letters(splitted_word)
+    }else{
       word0 <- c(letters,LETTERS)[1:L]
+    }
+    if(splitted_word != "default" || L <= 52){ 
       f <- Vectorize(function(first, length){
         paste0(word0[(first+1):(first+length)], collapse="")
       })
@@ -455,7 +466,7 @@ Bwalk_powers <- function(fun_Mn, N, v, labels=c("powers", "words")){
         attr(QQ[[n]], "dims") <- NULL
       }
     }else{
-      cat("Words too long")
+      cat(sprintf("The splitted word is too long (%s).", L))
     }
   }
   return(list(Mn=QQ, Pn=Kernels))
