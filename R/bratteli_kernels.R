@@ -87,19 +87,34 @@ Bdims <- function(Mn.fun, N){
 #'   return(M)
 #' }
 #' Bmetrics(Euler, 3)
-Bmetrics <- function(Mn.fun, N){
+Bmetrics <- function(Mn.fun, N, solver=c("rcdd", "glpk")){
   ckernels <- Bkernels(Mn.fun, N) 
-  RHO <- lapply(ckernels, function(kernel) matrix("", nrow=nrow(kernel), ncol=nrow(kernel)))  
+  solver <- match.arg(solver)
+  if(solver=="rcdd"){
+    RHO <- lapply(ckernels, function(kernel) matrix("", nrow=nrow(kernel), ncol=nrow(kernel)))
+  }else{
+    RHO <- lapply(ckernels, function(kernel) matrix(0, nrow=nrow(kernel), ncol=nrow(kernel)))  
+  }
   RHO[[1]] <- (diag(nrow(ckernels[[1]])) + 1) %% 2
   n <- length(ckernels)-1
+  if(solver=="rcdd"){
+    kanto <- function(mu, nu, dist){
+      as.character(kantorovich(as.bigq(mu), as.bigq(nu), dist=unname(dist)))
+    }
+  }else{
+    kanto <- function(mu, nu, dist){
+      kantorovich_glpk(as.numeric(as.bigq((mu))), as.numeric(as.bigq(nu)), dist=myutils::bigqmatrix2num(as.bigq(dist)))
+    }
+  }
   for(k in 1:n){
-    diag(RHO[[k+1]]) <- "0"
+    diag(RHO[[k+1]]) <- ifelse(solver=="rcdd", "0", 0)
     K <- nrow(RHO[[k+1]])
     kernel <- ckernels[[k+1]]
     for(i in 1:(K-1)){
       for(j in (i+1):K){
-        RHO[[k+1]][i,j] <- RHO[[k+1]][j,i] <- 
-          as.character(kantorovich(as.bigq(kernel[i,]), as.bigq(kernel[j,]), dist = unname(RHO[[k]])))
+        # RHO[[k+1]][i,j] <- RHO[[k+1]][j,i] <- 
+        #   as.character(kantorovich(as.bigq(kernel[i,]), as.bigq(kernel[j,]), dist = unname(RHO[[k]])))
+        RHO[[k+1]][i,j] <- RHO[[k+1]][j,i] <- kanto(kernel[i,], kernel[j,], RHO[[k]])
       }
     }
     dimnames(RHO[[k+1]]) <- list(colnames(Mn.fun(k)), colnames(Mn.fun(k)))

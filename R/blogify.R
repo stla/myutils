@@ -9,12 +9,13 @@
 html_fragment <- function (number_sections = FALSE, fig_width = 7, fig_height = 5, 
           fig_retina = if (!fig_caption) 2, fig_caption = FALSE, dev = "png", 
           smart = TRUE, keep_md = FALSE, md_extensions = NULL, pandoc_args = NULL, 
+          highlight=NULL,
           ...) 
 {
   rmarkdown::html_document(number_sections = number_sections, fig_width = fig_width, 
                 fig_height = fig_height, fig_retina = fig_retina, fig_caption = fig_caption, 
                 dev = dev, smart = smart, keep_md = keep_md, md_extensions = md_extensions, 
-                pandoc_args = pandoc_args, highlight = NULL, 
+                pandoc_args = pandoc_args, highlight = highlight, 
                 theme = NULL, ..., template = rmarkdown:::rmarkdown_system_file("rmd/fragment/default.html"))
 }
 
@@ -27,7 +28,7 @@ html_fragment <- function (number_sections = FALSE, fig_width = 7, fig_height = 
 #' @importFrom stringr str_detect str_split_fixed
 #' @import data.table
 #' @export
-blogify <- function(Rmd, htmlfragment=NULL, date=NULL, outdir=NULL, local=TRUE, template=system.file("blogify/z_template.html", package="myutils")){
+blogify <- function(Rmd, htmlfragment=NULL, highlight=NULL, date=NULL, outdir=NULL, local=TRUE, template=system.file("blogify/z_template.html", package="myutils")){
   meta <- readLines(Rmd, n=5)
   if(is.null(outdir)) outdir <- dirname(Rmd)
   if(is.null(date)){
@@ -46,9 +47,9 @@ blogify <- function(Rmd, htmlfragment=NULL, date=NULL, outdir=NULL, local=TRUE, 
   lines[whichlines[4]] <- sprintf(lines[whichlines[4]], Rmd)
   if(is.null(htmlfragment)){
     if(local) {
-      html <- local({ rmarkdown::render(Rmd, output_format=html_fragment(mathjax="default", self_contained=FALSE), output_dir=outdir) })
+      html <- local({ rmarkdown::render(Rmd, output_format=html_fragment(mathjax="default", self_contained=FALSE, highlight=highlight), output_dir=outdir) })
     } else{
-      html <- rmarkdown::render(Rmd, output_format=html_fragment(mathjax="default", self_contained=FALSE), output_dir=outdir)
+      html <- rmarkdown::render(Rmd, output_format=html_fragment(mathjax="default", self_contained=FALSE, highlight=highlight), output_dir=outdir)
     }
   } else {
     html <- htmlfragment
