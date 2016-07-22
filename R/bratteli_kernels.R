@@ -66,8 +66,10 @@ Bdims <- function(Mn.fun, N){
   M <- Mn.fun(k)
   if(nrow(M) != 1) stop("M0 must have only one row")
   Dims[[k+1]] <- dims0 <- as.vector(M)
-  for(k in 1:(N-1)){
-    Dims[[k+1]] <- dims0 <- as.vector(dims0 %*% Mn.fun(k)) 
+  if(N>1){
+    for(k in 1:(N-1)){
+      Dims[[k+1]] <- dims0 <- as.vector(dims0 %*% Mn.fun(k)) 
+    }
   }
   return(Dims)
 }
