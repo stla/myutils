@@ -287,7 +287,7 @@ BgraphTikZ <- function(outfile, fun_Mn, N,
   Code <- paste0("\t", c(elpos$code, connections$code), collapse="\n")
   # add packages
   if(!is.null(packages)){
-    packages <- sapply(packages, function(x) sprintf("\\usepackage{%s}\n", x))
+    packages <- paste0(sapply(packages, function(x) sprintf("\\usepackage{%s}\n", x)), collapse="")
   }else{
     packages <- ""
   }
