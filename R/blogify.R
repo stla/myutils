@@ -23,12 +23,13 @@ html_fragment <- function (number_sections = FALSE, fig_width = 7, fig_height = 
 #' 
 #' @param local  ne résoud pas la problème avec gmp;  par ailleurs je ne sais pas à quoi il sert...
 #' @param htmlfragment si ça ne marche pas avec \code{NULL}, lancer à la main \code{library(rmarkdown); render("posts/IntrinsicDistances.Rmd", output_format=html_fragment(mathjax=TRUE, self_contained=FALSE))} et mettre le fichier html
+#' @param ... arguments passés à \code{html_fragment}
 #' 
 #' @importFrom rmarkdown render
 #' @importFrom stringr str_detect str_split_fixed
 #' @import data.table
 #' @export
-blogify <- function(Rmd, htmlfragment=NULL, highlight=NULL, date=NULL, outdir=NULL, local=TRUE, template=system.file("blogify/z_template.html", package="myutils")){
+blogify <- function(Rmd, htmlfragment=NULL, highlight=NULL, date=NULL, outdir=NULL, local=TRUE, template=system.file("blogify/z_template.html", package="myutils"), ...){
   meta <- readLines(Rmd, n=5)
   if(is.null(outdir)) outdir <- dirname(Rmd)
   if(is.null(date)){
@@ -47,9 +48,9 @@ blogify <- function(Rmd, htmlfragment=NULL, highlight=NULL, date=NULL, outdir=NU
   lines[whichlines[4]] <- sprintf(lines[whichlines[4]], Rmd)
   if(is.null(htmlfragment)){
     if(local) {
-      html <- local({ rmarkdown::render(Rmd, output_format=html_fragment(mathjax="default", self_contained=FALSE, highlight=highlight), output_dir=outdir) })
+      html <- local({ rmarkdown::render(Rmd, output_format=html_fragment(mathjax="default", self_contained=FALSE, highlight=highlight, ...), output_dir=outdir) })
     } else{
-      html <- rmarkdown::render(Rmd, output_format=html_fragment(mathjax="default", self_contained=FALSE, highlight=highlight), output_dir=outdir)
+      html <- rmarkdown::render(Rmd, output_format=html_fragment(mathjax="default", self_contained=FALSE, highlight=highlight, ...), output_dir=outdir)
     }
   } else {
     html <- htmlfragment
