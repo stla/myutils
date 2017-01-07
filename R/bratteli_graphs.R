@@ -180,12 +180,14 @@ Bgraph <- function(fun_Mn, N, title=NA,
 BgraphTikZ <- function(outfile, fun_Mn, N, 
                        edgelabels="default", 
                        vertexlabels="colnames", 
+                       fvertexlabels = NULL,
+                       colorpath=NULL,
                        ROOTLABEL="\\varnothing", LATEXIFY=TRUE, 
                        packages=NULL, 
                        scale=c(50,50), bending=1, 
                        hor=FALSE, mirror=FALSE, 
                        northsouth=FALSE){
-  Mn <- sapply(0:(N-1), function(n) fun_Mn(n))
+  Mn <- sapply(0:(N-1), function(n) fun_Mn(n), simplify = FALSE)
   for(i in 1:N){
     if(is.null(colnames(Mn[[i]]))) colnames(Mn[[i]]) <- seq_len(ncol(Mn[[i]]))
   }
@@ -206,7 +208,7 @@ BgraphTikZ <- function(outfile, fun_Mn, N,
   # node id's
   elpos[, `:=`(node=myutils::charseq(.N, LETTERS[level[1]+1])), by="level"]
   #elpos[, `:=`(node=myutils::charseq(level+1, LETTERS[level+1])), by="level"]
-  if(is.character(vertexlabels)){
+  if(is.null(fvertexlabels) && is.character(vertexlabels)){
     if(vertexlabels=="colnames") fvertexlabels <- function(n) colnames(Mn[[n]])
     if(vertexlabels=="dims"){
       dims <- myutils::Bdims(fun_Mn, N)
@@ -269,19 +271,58 @@ BgraphTikZ <- function(outfile, fun_Mn, N,
     return(bend-mean(bend))
   }
   connections[, bend:=fbend(.N), by="id"]
+  # paths 
+  if(!is.null(colorpath)){
+    dd <- as.data.frame(connections)
+    ff <- function(e){
+      e1 <- which(dd$node1 == dd$node2[e]) # edges connected to edge i
+      paths <- lapply(e1, function(j) c(e,j))
+      if(N == 2){
+        return(paths)
+      }
+      for(m in 2:(N-1)){
+        e2 <- lapply(paths, function(p) which(dd$node1 == dd$node2[tail(p,1)]))
+        paths <- do.call(c, lapply(seq_along(paths), function(p) lapply(e2[[p]], function(ee) c(paths[[p]], ee))))
+      }
+      return(paths)
+    }
+    paths <- do.call(c, lapply(which(dd$level==0), ff))
+    path <- logical(nrow(dd))
+    if(colorpath>length(paths)){
+      warning(sprintf("There are %s paths and you supplied `colorpath=%s`", length(paths), colorpath))
+    }else{
+      path[paths[[colorpath]]] <- TRUE
+    }
+  }else{
+    path <- logical(nrow(connections))
+  }
+  connections[, path:=path]
+  #
   if(labels_on_edge){
     if(LATEXIFY) connections[, edgelabel:=myutils::dollarify()(edgelabel)]
     drawcode <- Vectorize(function(bend){
-      if(is.na(bend)) return(ifelse(northsouth, "\\draw[EdgeStyle](%s.south) to node[EdgeLabelStyle]{%s} (%s.north);", "\\draw[EdgeStyle](%s) to node[EdgeLabelStyle]{%s} (%s);"))
-      return(paste0(sprintf("\\draw[EdgeStyle, bend left=%s]", bend), ifelse(northsouth, "(%s.south) to node[EdgeLabelStyle]{%s} (%s.north);", "(%s) to node[EdgeLabelStyle]{%s} (%s);")))
+      if(is.na(bend)) return(ifelse(northsouth, 
+                                    "\\draw[%s](%s.south) to node[EdgeLabelStyle]{%s} (%s.north);", 
+                                    "\\draw[%s](%s) to node[EdgeLabelStyle]{%s} (%s);")
+                             )
+      return(paste0(sprintf("\\draw[%s, bend left=%s]", "%s", bend), 
+                    ifelse(northsouth, 
+                           "(%s.south) to node[EdgeLabelStyle]{%s} (%s.north);", 
+                           "(%s) to node[EdgeLabelStyle]{%s} (%s);"))
+             )
     })
-    connections[, code:=sprintf(drawcode(bend), node1, edgelabel, node2)]
+    connections[, code:=sprintf(drawcode(bend), ifelse(path, "EdgeStylePath", "EdgeStyle"), node1, edgelabel, node2)]
   }else{
     drawcode <- Vectorize(function(bend){
-      if(is.na(bend)) return(ifelse(northsouth, "\\draw[EdgeStyle](%s.south) to (%s.north);", "\\draw[EdgeStyle](%s) to (%s);"))
-      return(paste0(sprintf("\\draw[EdgeStyle, bend left=%s]", bend), ifelse(northsouth, "(%s.south) to (%s.north);", "(%s) to (%s);")))
+      if(is.na(bend)) return(ifelse(northsouth, 
+                                    "\\draw[%s](%s.south) to (%s.north);", 
+                                    "\\draw[%s](%s) to (%s);")
+                             )
+      return(paste0(sprintf("\\draw[%s, bend left=%s]", "%s", bend), 
+                    ifelse(northsouth, "(%s.south) to (%s.north);", "(%s) to (%s);"))
+             )
     })
-    connections[, code:=sprintf(drawcode(bend), node1, node2)]
+    connections[, code:=sprintf(drawcode(bend), ifelse(path, "EdgeStylePath", "EdgeStyle"), node1, node2)]
   }
   # TikZ code
   Code <- paste0("\t", c(elpos$code, connections$code), collapse="\n")
@@ -292,10 +333,14 @@ BgraphTikZ <- function(outfile, fun_Mn, N,
     packages <- ""
   }
   # write code to template
-  template <- system.file("templates", "template_BratteliTikZ2.RDS", package="myutils")
+  template <- system.file("templates", "template_BratteliTikZ3.RDS", package="myutils")
   texfile <- sprintf(readRDS(template), packages, Code)
   writeLines(texfile, outfile)
   #return(connections)
+  #return(paths)
+  if(colorpath){
+    return(invisible(paths))
+  }
   return(invisible())
 }
 

@@ -1,0 +1,3 @@
+- color a path (to do animation)
+- examples dans extdata
+- options label scales, etc

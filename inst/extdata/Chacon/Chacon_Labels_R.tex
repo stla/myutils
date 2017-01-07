@@ -1,0 +1,76 @@
+\documentclass[12pt,border=0pt]{standalone}
+
+\usepackage[utf8]{inputenc} 
+\usepackage{amssymb,amsmath}
+\usepackage{tikz}
+
+
+
+\thispagestyle{empty}
+
+\begin{document}
+
+\begin{tikzpicture}[x=10pt,y=6pt]
+  \centering
+  \tikzset{VertexStyle/.style = {
+    shape         = rectangle,
+    draw          = blue, 
+    fill          = white, 
+  	line width    = 1pt, 
+    text          = black,
+    inner sep     = 1pt,
+    outer sep     = 0pt,
+    minimum size  = 14 pt,
+    scale         = 1
+    }
+  }
+  \tikzset{EdgeStyle/.style = {
+    draw            = black, 
+    thick,
+    double          = orange,
+    double distance = 1pt
+    }
+  }
+  \tikzset{EdgeLabelStyle/.style = {
+    draw          = black,
+  	shape         = circle, 
+  	line width    = 1pt, 
+  	minimum size  = 10pt, 
+    inner sep     = 1pt,
+    outer sep     = 0pt,
+    fill          = yellow,
+    text          = black,
+    scale         = 1
+    }
+  }
+
+	\node[VertexStyle](A1) at (25, 45) {$\varnothing$};
+	\node[VertexStyle](B1) at (12.5, 35) {$1$};
+	\node[VertexStyle](B2) at (37.5, 35) {$2$};
+	\node[VertexStyle](C1) at (12.5, 25) {$1$};
+	\node[VertexStyle](C2) at (37.5, 25) {$2$};
+	\node[VertexStyle](D1) at (12.5, 15) {$1$};
+	\node[VertexStyle](D2) at (37.5, 15) {$2$};
+	\node[VertexStyle](E1) at (12.5, 5) {$1$};
+	\node[VertexStyle](E2) at (37.5, 5) {$2$};
+	\draw[EdgeStyle](A1) to node[EdgeLabelStyle]{$.$} (B1);
+	\draw[EdgeStyle](A1) to node[EdgeLabelStyle]{$.$} (B2);
+	\draw[EdgeStyle, bend left=-40](B1) to node[EdgeLabelStyle]{$0$} (C1);
+	\draw[EdgeStyle, bend left=0](B1) to node[EdgeLabelStyle]{$1$} (C1);
+	\draw[EdgeStyle, bend left=40](B1) to node[EdgeLabelStyle]{$3$} (C1);
+	\draw[EdgeStyle](B2) to node[EdgeLabelStyle]{$2$} (C1);
+	\draw[EdgeStyle](B2) to node[EdgeLabelStyle]{$0$} (C2);
+	\draw[EdgeStyle, bend left=-40](C1) to node[EdgeLabelStyle]{$0$} (D1);
+	\draw[EdgeStyle, bend left=0](C1) to node[EdgeLabelStyle]{$1$} (D1);
+	\draw[EdgeStyle, bend left=40](C1) to node[EdgeLabelStyle]{$3$} (D1);
+	\draw[EdgeStyle](C2) to node[EdgeLabelStyle]{$2$} (D1);
+	\draw[EdgeStyle](C2) to node[EdgeLabelStyle]{$0$} (D2);
+	\draw[EdgeStyle, bend left=-40](D1) to node[EdgeLabelStyle]{$0$} (E1);
+	\draw[EdgeStyle, bend left=0](D1) to node[EdgeLabelStyle]{$1$} (E1);
+	\draw[EdgeStyle, bend left=40](D1) to node[EdgeLabelStyle]{$3$} (E1);
+	\draw[EdgeStyle](D2) to node[EdgeLabelStyle]{$2$} (E1);
+	\draw[EdgeStyle](D2) to node[EdgeLabelStyle]{$0$} (E2);
+
+  \end{tikzpicture}
+
+\end{document}
